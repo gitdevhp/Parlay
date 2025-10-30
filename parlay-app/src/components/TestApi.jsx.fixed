@@ -1,0 +1,66 @@
+import React, { useState, useEffect } from 'react';
+import { espnApi } from '../services/espnApi';
+
+const TestApi = () => {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const playerData = await espnApi.getGamesAndPlayers();
+                setData(playerData);
+                console.log('Fetched data:', playerData);
+            } catch (err) {
+                setError(err.message);
+                console.error('Error:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []); // Added missing closing bracket for useEffect
+
+    if (loading) return <div>Loading ESPN data...</div>;
+    if (error) return <div>Error: {error}</div>;
+
+    return (
+        <div>
+            <h2>Player Props Test</h2>
+            <div className="player-grid">
+                {data && data.map((player, index) => (
+                    <div key={index} className="player-card">
+                        <h3>{player.name}</h3>
+                        <p>Team: {player.team}</p>
+                        <p>Position: {player.position}</p>
+                        <div className="stats">
+                            <h4>Season Averages:</h4>
+                            <ul>
+                                {player.stats && Object.entries(player.stats).map(([stat, value]) => (
+                                    <li key={stat}>
+                                        {stat}: {value}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                        <div className="projections">
+                            <h4>Projected Props:</h4>
+                            <ul>
+                                {player.projectedProps && Object.entries(player.projectedProps).map(([prop, data]) => (
+                                    <li key={prop}>
+                                        {prop}: {data.line} (Range: {data.low} - {data.high})
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+export default TestApi;
